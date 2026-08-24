@@ -59,6 +59,20 @@
       .modal-backdrop {
         z-index: 11000 !important;
       }
+      .route-checkboxes { max-height: 52vh; overflow-y: auto; padding: .35rem 4px .35rem 0; }
+      .route-check { margin: .18rem 0; }
+      .route-check .form-check-label { font-size: .68rem; line-height: 1.15; }
+      .route-master-check { padding-top: .25rem; border-bottom: 1px solid rgba(255,255,255,.35); padding-bottom: .45rem; }
+      .statistics-tabs { flex-wrap: nowrap; overflow-x: auto; }
+      .statistics-tabs .nav-link { white-space: nowrap; font-size: .78rem; color: #fff !important; background: #922B21 !important; border-color: #922B21 !important; opacity: .72; }
+      .statistics-tabs .nav-link.active { color: #fff !important; background: #5f1711 !important; border-color: #5f1711 !important; opacity: 1; }
+      .turn-direction-note { display: inline-block; margin-left: .35rem; color: #5f1711; font-size: .78rem; font-weight: 500; }
+      .turn-chart, .comparison-chart { width: 100%; height: 330px !important; max-height: 330px; }
+      .comparison-table th, .comparison-table td { text-align: center; vertical-align: middle; font-size: .78rem; }
+      .comparison-table thead th { background: #6d1b16 !important; color: #fff !important; border-color: #4d100d !important; }
+      .comparison-table tbody th { background: #922B21 !important; color: #fff !important; border-color: #6d1b16 !important; text-align: left; }
+      .comparison-table tbody td { background: #f4e7e5 !important; color: #32100d !important; border-color: #b86d65 !important; }
+      .comparison-table tbody tr:nth-child(even) td { background: #ead0cc !important; }
     </style>
     <style>
       #estadisticasChart, #estadisticasChartMensual {
@@ -141,32 +155,29 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
           </div>
           <div class="modal-body">
-            <div id="estadisticasInfo" class="mb-2"></div>
-            <div id="tablaMensual" class="mb-3"></div>
-            <div class="mb-2 text-center">
-              <button id="btnVistasDiaria" class="btn btn-sm btn-vista active" data-vista="diaria">Vista Diaria</button>
-              <button id="btnVistaMensual" class="btn btn-sm btn-vista-outline" data-vista="mensual">Vista Mensual</button>
-            </div>
-            <canvas id="estadisticasChart"></canvas>
-            <canvas id="estadisticasChartMensual" style="display:none;"></canvas>
-            <div id="velocidadesPromedio" class="mt-3 text-center">
-              <h6>Velocidad promedio</h6>
-              <div class="d-flex justify-content-center gap-4">
-                <div>
-                  <canvas id="velTransporte" width="150" height="150"></canvas>
-                  <div>Ruta Transporte</div>
-                </div>
-                <div>
-                  <canvas id="velVehiculo" width="150" height="150"></canvas>
-                  <div>Ruta Vehículo</div>
-                </div>
+            <ul class="nav nav-tabs statistics-tabs" role="tablist">
+              <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabMatutino" type="button" role="tab">Matutino</button></li>
+              <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabTarde" type="button" role="tab">Tarde</button></li>
+              <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabVespertino" type="button" role="tab">Vespertino</button></li>
+              <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabComparativo" type="button" role="tab">Comparativo</button></li>
+            </ul>
+            <div class="tab-content pt-3">
+              <div class="tab-pane fade show active" id="tabMatutino" role="tabpanel"></div>
+              <div class="tab-pane fade" id="tabTarde" role="tabpanel"></div>
+              <div class="tab-pane fade" id="tabVespertino" role="tabpanel"></div>
+              <div class="tab-pane fade" id="tabComparativo" role="tabpanel">
+                <div id="comparativoContenido"></div>
+                <canvas id="comparativoChart" class="comparison-chart"></canvas>
               </div>
             </div>
+            <div class="estadisticas-distancia" id="estadisticasDistancia" style="display:block!important;width:100%!important;margin-left:0!important;text-align:right!important"></div>
 
           </div>
           
           <div class="modal-footer">
-            <small class="text-muted">Fuente: archivo interno de monitoreo de rutas</small>
+            <div class="estadisticas-footer-info" style="display:block!important;width:100%!important;text-align:right!important">
+              <small class="text-muted" style="display:block!important;width:100%!important">Fuente: archivo interno de monitoreo de rutas</small>
+            </div>
           </div>
         </div>
       </div>
@@ -177,51 +188,13 @@
         <button class="toggle-btn" id="toggleBtn"><span class="hamburger"></span></button>
         <div class="informacion" id="sidebar">
           <div class="contenido-informacion">
-            <h6 class="mb-2 sidebar-help-text">Da clic en una ruta para conocer sus estadísticas, o en un conflicto vial
-para ver sus detalles.</h6>
+            <h6 class="mb-2 sidebar-help-text">Principales rutas de traslado en AO</h6>
             <div id="controlCapasContainer" class="control-capas-panel">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="chkMatutino">
-                <label class="form-check-label" for="chkMatutino">Rutas Matutino</label>
-                <div class="legend-block">
-                  <div class="legend-row">
-                    <span class="legend-swatch" style="background:#FFD700"></span>
-                    <span>Ruta monitoreada</span>
-                  </div>
-                  <div class="legend-row">
-                    <span class="legend-swatch legend-swatch-red"></span>
-                    <span>Conflicto vial</span>
-                  </div>
-                </div>
+              <div class="form-check route-master-check">
+                <input class="form-check-input" type="checkbox" id="chkRutas" checked>
+                <label class="form-check-label" for="chkRutas"><strong>Rutas</strong></label>
               </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="chkTarde">
-                <label class="form-check-label" for="chkTarde">Rutas Tarde</label>
-                <div class="legend-block">
-                  <div class="legend-row">
-                    <span class="legend-swatch" style="background:#FF9800"></span>
-                    <span>Ruta monitoreada</span>
-                  </div>
-                  <div class="legend-row">
-                    <span class="legend-swatch legend-swatch-red"></span>
-                    <span>Conflicto vial</span>
-                  </div>
-                </div>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="chkVespertino">
-                <label class="form-check-label" for="chkVespertino">Rutas Vespertino</label>
-                <div class="legend-block">
-                  <div class="legend-row">
-                    <span class="legend-swatch" style="background:#3F51B5"></span>
-                    <span>Ruta monitoreada</span>
-                  </div>
-                  <div class="legend-row">
-                    <span class="legend-swatch legend-swatch-red"></span>
-                    <span>Conflicto vial</span>
-                  </div>
-                </div>
-              </div>
+              <div id="routeCheckboxes" class="route-checkboxes"></div>
             </div>
             <hr />
             <div class="d-grid gap-2">
@@ -234,6 +207,7 @@ para ver sus detalles.</h6>
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-gauge@4.4.0/dist/chartjs-chart-gauge.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -406,14 +380,272 @@ para ver sus detalles.</h6>
           } catch(e) {}
         });
 
-      const coloresTurno = { matutino: "#FFD700", tarde: "#FF9800", vespertino: "#3F51B5" };
-      const capasRutas = { matutino: null, tarde: null, vespertino: null };
-      const capasRutasOutline = { matutino: null, tarde: null, vespertino: null };
-      const capasNodos = { matutino: null, tarde: null, vespertino: null };
-      let rutasGeoJSON = { matutino: null, tarde: null, vespertino: null };
-      let nodosGeoJSON = { matutino: null, tarde: null, vespertino: null };
+      const coloresTurno = { matutino: "#FFD700", tarde: "#FFD700", vespertino: "#3F51B5" };
+      const rutasGeoJSON = { matutino: null, tarde: null, vespertino: null };
+      const nodosGeoJSON = { matutino: null, tarde: null, vespertino: null };
+      const capasRutasPorId = {};
       const nombresNodos = { matutino: "NODOS MATUTINO", tarde: "NODOS TARDE", vespertino: "NODOS VESPERTINO" };
-      const checkboxesTurno = { matutino: "chkMatutino", tarde: "chkTarde", vespertino: "chkVespertino" };
+      const turnos = ["matutino", "tarde", "vespertino"];
+      const distanciaNodoMetros = 10;
+      const routeIdKey = value => String(value || "").trim().toUpperCase().replace(/\s+/g, " ");
+
+      function routeBaseId(value) {
+        const match = routeIdKey(value).match(/^(\d+)/);
+        return match ? match[1] : routeIdKey(value);
+      }
+
+      function routeExcludedInTurno(routeId, turno) {
+        const id = routeIdKey(routeId);
+        return id === "4 A IDA" || id === "4 A REGRESO" ||
+          (turno === "matutino" && id === "12 REGRESO") ||
+          (turno === "tarde" && id === "12 REGRESO") ||
+          (turno === "vespertino" && id === "12 IDA");
+      }
+
+      function featureMatchesRoute(feature, routeId, turno) {
+        if (!feature || routeExcludedInTurno(feature.properties?.IDENTIFICA, turno)) return false;
+        return routeBaseId(feature.properties?.IDENTIFICA) === routeBaseId(routeId);
+      }
+
+      function selectRouteFeature(turno, routeId) {
+        const features = (rutasGeoJSON[turno]?.features || []).filter(feature => featureMatchesRoute(feature, routeId, turno));
+        if (!features.length) return null;
+        const regreso = features.find(feature => /REGRESO/i.test(feature.properties?.IDENTIFICA || ""));
+        const ida = features.find(feature => !/REGRESO/i.test(feature.properties?.IDENTIFICA || ""));
+        return turno === "vespertino" ? (regreso || ida || features[0]) : (ida || features[0]);
+      }
+
+      function coordinatesFromGeometry(geometry) {
+        if (!geometry?.coordinates) return [];
+        const flatten = coordinates => coordinates.length && typeof coordinates[0] === "number"
+          ? [coordinates]
+          : coordinates.flatMap(flatten);
+        return flatten(geometry.coordinates).map(coord => [Number(coord[1]), Number(coord[0])]);
+      }
+
+      function coordinatePartsFromGeometry(geometry) {
+        if (!geometry?.coordinates) return [];
+        const parts = geometry.type === "LineString" ? [geometry.coordinates] : geometry.coordinates;
+        return parts.map(part => part.map(coord => [Number(coord[1]), Number(coord[0])])).filter(part => part.length > 1);
+      }
+
+      function offsetRouteSouth(feature, offsetMeters = 5) {
+        if (!feature?.geometry?.coordinates) return feature;
+        const geometry = feature.geometry;
+        const rawParts = geometry.type === "LineString" ? [geometry.coordinates] : geometry.coordinates;
+        const shiftedParts = rawParts.map(part => part.map((coordinate, index) => {
+          const effectiveOffset = offsetMeters / 111320;
+          return [
+            Number(coordinate[0]),
+            Number(coordinate[1]) - effectiveOffset,
+            ...coordinate.slice(2)
+          ];
+        }));
+        return { ...feature, geometry: { ...geometry, coordinates: geometry.type === "LineString" ? shiftedParts[0] : shiftedParts } };
+      }
+
+      function pointSegmentDistanceMeters(point, start, end) {
+        const latScale = 111320;
+        const lngScale = 111320 * Math.cos(point[0] * Math.PI / 180);
+        const px = point[1] * lngScale, py = point[0] * latScale;
+        const sx = start[1] * lngScale, sy = start[0] * latScale;
+        const ex = end[1] * lngScale, ey = end[0] * latScale;
+        const dx = ex - sx, dy = ey - sy;
+        const t = dx || dy ? Math.max(0, Math.min(1, ((px - sx) * dx + (py - sy) * dy) / (dx * dx + dy * dy))) : 0;
+        return Math.hypot(px - (sx + t * dx), py - (sy + t * dy));
+      }
+
+      function linesWithinMeters(first, second, meters) {
+        const firstParts = coordinatePartsFromGeometry(first);
+        const secondParts = coordinatePartsFromGeometry(second);
+        const nearLine = (point, line) => line.slice(1).some((end, index) => pointSegmentDistanceMeters(point, line[index], end) <= meters);
+        return firstParts.some(firstPart => firstPart.some(point => secondParts.some(secondPart => nearLine(point, secondPart)))) ||
+          secondParts.some(secondPart => secondPart.some(point => firstParts.some(firstPart => nearLine(point, firstPart))));
+      }
+
+      function routeNodeFeatures(routeId) {
+        const routeLines = turnos.map(turno => selectRouteFeature(turno, routeId)).filter(Boolean);
+        const result = [];
+        turnos.forEach(turno => {
+          (nodosGeoJSON[turno]?.features || []).forEach(feature => {
+            if (routeBaseId(feature.properties?.Ruta) !== routeBaseId(routeId)) return;
+            if (routeLines.some(route => linesWithinMeters(feature.geometry, route.geometry, distanciaNodoMetros))) result.push({ feature, turno });
+          });
+        });
+        return result;
+      }
+
+      function distanceMetersBetween(first, second) {
+        const latScale = 111320;
+        const lngScale = 111320 * Math.cos(first[0] * Math.PI / 180);
+        return Math.hypot((second[1] - first[1]) * lngScale, (second[0] - first[0]) * latScale);
+      }
+
+      function pointDistanceToGeometryMeters(point, geometry) {
+        const parts = coordinatePartsFromGeometry(geometry);
+        if (!parts.length) return Infinity;
+        return Math.min(...parts.flatMap(line => line.slice(1).map((end, index) => pointSegmentDistanceMeters(point, line[index], end))));
+      }
+
+      function routePositionForPoint(point, geometry) {
+        let bestPosition = 0;
+        let bestDistance = Infinity;
+        let travelled = 0;
+        coordinatePartsFromGeometry(geometry).forEach(line => {
+          for (let index = 1; index < line.length; index += 1) {
+            const start = line[index - 1];
+            const end = line[index];
+            const segmentLength = distanceMetersBetween(start, end);
+            const distance = pointSegmentDistanceMeters(point, start, end);
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              bestPosition = travelled + segmentLength / 2;
+            }
+            travelled += segmentLength;
+          }
+        });
+        return bestPosition;
+      }
+
+      function pointAtDistanceOnLine(points, distance) {
+        let travelled = 0;
+        for (let index = 1; index < points.length; index += 1) {
+          const start = points[index - 1];
+          const end = points[index];
+          const segment = distanceMetersBetween(start, end);
+          if (travelled + segment >= distance) {
+            const fraction = (distance - travelled) / segment;
+            return [start[0] + (end[0] - start[0]) * fraction, start[1] + (end[1] - start[1]) * fraction];
+          }
+          travelled += segment;
+        }
+        return points[points.length - 1];
+      }
+
+      function curvedArrowPoints(points, startDistance, endDistance) {
+        const result = [pointAtDistanceOnLine(points, startDistance)];
+        let travelled = 0;
+        for (let index = 1; index < points.length; index += 1) {
+          const segment = distanceMetersBetween(points[index - 1], points[index]);
+          travelled += segment;
+          if (travelled > startDistance && travelled < endDistance) result.push(points[index]);
+        }
+        result.push(pointAtDistanceOnLine(points, endDistance));
+        return result;
+      }
+
+      const correctedArrowRoutes = new Set(["8", "10", "11", "12"]);
+
+      function createDirectionArrows(feature, turno, conflictFeatures, referenceFeature = null, routeId = "") {
+        const arrowLayer = L.layerGroup();
+        if (typeof L.polylineDecorator !== "function") {
+          console.error("PolylineDecorator no se cargó; no se pueden dibujar las flechas.");
+          return arrowLayer;
+        }
+        const spacingMeters = 420;
+        const arrowLengthMeters = 100;
+        const conflictBufferMeters = 30;
+        const arrowPixelSize = Math.max(3, Math.min(5, map.getZoom() - 9));
+        coordinatePartsFromGeometry(feature?.geometry).forEach(sourcePoints => {
+          let points = sourcePoints;
+          if (turno === "vespertino") {
+            const firstPosition = referenceFeature ? routePositionForPoint(sourcePoints[0], referenceFeature.geometry) : 0;
+            const lastPosition = referenceFeature ? routePositionForPoint(sourcePoints[sourcePoints.length - 1], referenceFeature.geometry) : 0;
+            points = referenceFeature
+              ? (firstPosition < lastPosition ? [...sourcePoints].reverse() : sourcePoints)
+              : [...sourcePoints].reverse();
+          }
+          if (correctedArrowRoutes.has(routeId)) points = [...points].reverse();
+          const totalMeters = points.slice(1).reduce((sum, point, index) => sum + distanceMetersBetween(points[index], point), 0);
+          for (let startDistance = 0; startDistance + arrowLengthMeters <= totalMeters; startDistance += spacingMeters) {
+            const arrowPoints = curvedArrowPoints(points, startDistance, startDistance + arrowLengthMeters);
+            const overlapsConflict = arrowPoints.some(point => conflictFeatures.some(conflict => pointDistanceToGeometryMeters(point, conflict.geometry) <= conflictBufferMeters));
+            if (overlapsConflict || arrowPoints.length < 2) continue;
+
+            const arrowLine = L.polyline(arrowPoints, {
+              pane: "routeArrowsPane",
+              color: "#111",
+              weight: 1.5,
+              opacity: .95,
+              interactive: false
+            }).addTo(arrowLayer);
+            const decorator = L.polylineDecorator(arrowLine, {
+              pane: "routeArrowsPane",
+              patterns: [{
+                offset: "100%",
+                repeat: 0,
+                symbol: L.Symbol.arrowHead({
+                  pixelSize: arrowPixelSize,
+                  polygon: false,
+                  pathOptions: { color: "#111", weight: 1.5, opacity: .95, fill: false, interactive: false }
+                })
+              }]
+            }).addTo(arrowLayer);
+            arrowDecorators.push(decorator);
+          }
+        });
+        return arrowLayer;
+      }
+
+      function routeStyle(turno) { return { color: coloresTurno[turno], weight: 5, opacity: 1 }; }
+      function routeOutlineStyle(turno) { return { color: "#111", weight: 8, opacity: .7 }; }
+      const arrowDecorators = [];
+
+      if (!map.getPane("routeArrowsPane")) {
+        map.createPane("routeArrowsPane");
+        map.getPane("routeArrowsPane").style.zIndex = 650;
+      }
+      if (!map.getPane("conflictNodesPane")) {
+        map.createPane("conflictNodesPane");
+        map.getPane("conflictNodesPane").style.zIndex = 600;
+      }
+      if (!map.getPane("conflictPopupPane")) {
+        map.createPane("conflictPopupPane");
+        map.getPane("conflictPopupPane").style.zIndex = 1300;
+      }
+      function updateArrowScaleVisibility() {
+        const pane = map.getPane("routeArrowsPane");
+        if (pane) pane.style.display = "";
+        const pixelSize = Math.max(3, Math.min(5, map.getZoom() - 9));
+        arrowDecorators.forEach(decorator => {
+          if (typeof decorator.setPatterns === "function") {
+            decorator.setPatterns([{ offset: "100%", repeat: 0, symbol: L.Symbol.arrowHead({ pixelSize, polygon: false, pathOptions: { color: "#111", weight: 1.5, opacity: .95, fill: false, interactive: false } }) }]);
+          }
+        });
+      }
+      map.on("zoomend", updateArrowScaleVisibility);
+      updateArrowScaleVisibility();
+
+      function setRouteVisibility(routeId, visible) {
+        const route = capasRutasPorId[routeId];
+        if (!route) return;
+        route.layers.forEach(layer => {
+          if (visible) layer.addTo(map); else map.removeLayer(layer);
+        });
+        route.arrows.forEach(layer => {
+          if (visible) layer.addTo(map); else map.removeLayer(layer);
+        });
+        if (visible) route.nodes.addTo(map); else map.removeLayer(route.nodes);
+      }
+
+      function updateMasterRouteCheckbox() {
+        const checkboxes = [...document.querySelectorAll(".route-checkbox")];
+        const master = document.getElementById("chkRutas");
+        if (!master) return;
+        master.checked = checkboxes.length > 0 && checkboxes.every(input => input.checked);
+        master.indeterminate = checkboxes.some(input => input.checked) && !master.checked;
+      }
+
+      function createRouteCheckbox(routeId, name) {
+        const item = document.createElement("div");
+        item.className = "form-check route-check";
+        item.innerHTML = `<input class="form-check-input route-checkbox" type="checkbox" id="route-${routeId}" data-route-id="${routeId}" checked><label class="form-check-label" for="route-${routeId}">${name}</label>`;
+        item.querySelector("input").addEventListener("change", event => {
+          setRouteVisibility(routeId, event.target.checked);
+          updateMasterRouteCheckbox();
+        });
+        document.getElementById("routeCheckboxes").appendChild(item);
+      }
 
       function routeExcludedInTurno(routeId, turno) {
         const normalizedRoute = String(routeId || '').trim().toUpperCase();
@@ -438,6 +670,11 @@ para ver sus detalles.</h6>
         return false;
       }
 
+      function tiempoValido(record) {
+        const tiempo = Number(record?.Tiempo);
+        return Number.isFinite(tiempo) && tiempo > 0;
+      }
+
       function routeStyle(turno) {
         return { color: coloresTurno[turno], weight: 5, opacity: 1 };
       }
@@ -446,124 +683,67 @@ para ver sus detalles.</h6>
         return { color: '#000000', weight: 7, opacity: 1 };
       }
 
-      function syncTurnoLayers(turno) {
-        const capa = capasRutas[turno];
-        const outline = capasRutasOutline[turno];
-        const capaNodos = capasNodos[turno];
-        const checkbox = document.getElementById(checkboxesTurno[turno]);
-        const checked = !!(checkbox && checkbox.checked);
-
-        if (!capa) return;
-
-        if (checked) {
-          if (outline && !map.hasLayer(outline)) outline.addTo(map);
-          if (!map.hasLayer(capa)) capa.addTo(map);
-          if (capaNodos && !map.hasLayer(capaNodos)) capaNodos.addTo(map);
-        } else {
-          if (map.hasLayer(capa)) map.removeLayer(capa);
-          if (outline && map.hasLayer(outline)) map.removeLayer(outline);
-          if (capaNodos && map.hasLayer(capaNodos)) map.removeLayer(capaNodos);
-        }
-
-        requestAnimationFrame(() => map.invalidateSize({ pan: false }));
-      }
-
-      ["matutino", "tarde", "vespertino"].forEach(turno => {
-        fetch(`data/rutas_${turno}.geojson`)
-          .then(r => r.json())
-          .then(gj => {
-            rutasGeoJSON[turno] = gj;
-            capasRutasOutline[turno] = L.geoJSON(gj, {
-              interactive: false,
-              filter: feature => !routeExcludedInTurno(feature.properties?.IDENTIFICA, turno),
-              style: routeOutlineStyle()
-            });
-            capasRutas[turno] = L.geoJSON(gj, {
-              interactive: true,
-              filter: feature => !routeExcludedInTurno(feature.properties?.IDENTIFICA, turno),
+      function buildRouteLayers() {
+        const routeIds = [...new Set((rutasGeoJSON.matutino?.features || []).map(feature => routeBaseId(feature.properties?.IDENTIFICA)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
+        routeIds.forEach(routeId => {
+          const morningFeature = selectRouteFeature("matutino", routeId);
+          const eveningFeature = selectRouteFeature("vespertino", routeId);
+          const eveningRenderFeature = eveningFeature
+            ? (routeId === "8" ? eveningFeature : offsetRouteSouth(eveningFeature, 5))
+            : null;
+          const morningName = morningFeature?.properties?.["O/D"] || `Ruta ${routeId}`;
+          const eveningName = eveningFeature?.properties?.["O/D"] || morningName;
+          const name = morningName !== eveningName ? `${morningName.split(" - ")[0]} ↔ ${eveningName.split(" - ")[0]}` : morningName;
+          const layers = [];
+          [["matutino", morningFeature], ["vespertino", eveningRenderFeature]].forEach(([turno, feature]) => {
+            if (!feature) return;
+            const line = L.geoJSON(feature, {
               style: routeStyle(turno),
-              onEachFeature: (feat, layer) => {
-                const rutaId = feat.properties?.IDENTIFICA ?? "s/d";
-                const od = feat.properties?.["O/D"] ?? "";
-                layer.bindPopup(`<strong>Ruta:</strong> ${od}<br><em>Turno: ${turno}</em>`);
-                layer.on("click tap", () => {
-                  console.log("Click en ruta:", rutaId, "turno:", turno);
-                  dibujarGraficaRuta(rutaId, turno, `RUTA ${rutaId}`, od);
-                });
-              }
+              onEachFeature: (feat, layer) => layer.bindPopup(`<strong>Ruta:</strong> ${feat.properties?.["O/D"] || name}<br><em>Turno: ${turno}</em>`)
             });
-            syncTurnoLayers(turno);
+            line.on("click", () => dibujarGraficaRuta(routeId, { matutino: morningName, tarde: morningName, vespertino: eveningName, comparison: name }));
+            layers.push(line);
           });
-        
-        // Cargar nodos para cada turno
-        fetch(`data/${nombresNodos[turno]}.geojson`)
-          .then(r => r.json())
-          .then(gj => {
-            nodosGeoJSON[turno] = gj;
-            capasNodos[turno] = L.geoJSON(gj, {
-              interactive: true,
-              style: { color: "#FF0000", weight: 6, fill: false },
-              onEachFeature: (feat, layer) => {
-                const motivoPri = feat.properties?.Motivo_Pri ?? feat.properties?.Motivo ?? "s/d";
-                const turnoNodo = feat.properties?.Turno ?? "s/d";
-                const amplitud = feat.properties?.Amplitud ?? "s/d";
-                const rutaNodo = feat.properties?.Ruta ?? "s/d";
-                const sentido = feat.properties?.Sentido ?? "s/d";
-                const mes = feat.properties?.Mes ?? "s/d";
-                const popup = `<strong>Conflicto vial</strong><br><strong>Motivo principal:</strong> ${motivoPri}<br><strong>Turno:</strong> ${turnoNodo}<br><strong>Amplitud:</strong> ${amplitud}`;
-                layer.bindPopup(popup, { maxWidth: 260 });
-                const abrirPopupNodo = (e) => {
-                  if (e?.originalEvent) e.originalEvent.stopPropagation?.();
-                  layer.openPopup();
-                };
-                layer.on("click", abrirPopupNodo);
-                layer.on("tap", abrirPopupNodo);
-              }
-            });
-            syncTurnoLayers(turno);
-          })
-          .catch(e => console.warn(`No se pudo cargar nodos para ${turno}:`, e));
+          let matchingNodes = [];
+          try {
+            matchingNodes = routeNodeFeatures(routeId);
+          } catch (error) {
+            console.error(`No se pudieron filtrar los nodos de la ruta ${routeId}:`, error);
+          }
+          const nodeLayers = matchingNodes.map(({ feature }) => L.geoJSON(feature, {
+            pane: "conflictNodesPane",
+            style: { color: "#FF0000", weight: 6, opacity: 1 },
+            onEachFeature: (feat, layer) => layer.bindPopup(`<strong>Conflicto vial</strong><br><strong>Motivo principal:</strong> ${feat.properties?.Motivo_Pri || feat.properties?.Motivo || "s/d"}<br><strong>Turno:</strong> ${feat.properties?.Turno || "s/d"}<br><strong>Amplitud:</strong> ${feat.properties?.Amplitud || "s/d"}`, { pane: "conflictPopupPane", className: "conflict-popup" })
+          }));
+          const conflictFeatures = matchingNodes.map(({ feature }) => feature);
+          const arrows = [];
+          if (morningFeature) arrows.push(createDirectionArrows(morningFeature, "matutino", conflictFeatures, null, routeId));
+          if (eveningRenderFeature) arrows.push(createDirectionArrows(eveningRenderFeature, "vespertino", conflictFeatures, morningFeature, routeId));
+          const nodes = L.layerGroup(nodeLayers);
+          capasRutasPorId[routeId] = { layers, arrows, nodes };
+          createRouteCheckbox(routeId, name);
+          setRouteVisibility(routeId, true);
+        });
+        document.getElementById("chkRutas").addEventListener("change", event => {
+          document.querySelectorAll(".route-checkbox").forEach(input => { input.checked = event.target.checked; setRouteVisibility(input.dataset.routeId, event.target.checked); });
+          updateMasterRouteCheckbox();
+        });
+      }
+
+      Promise.all(turnos.map(turno => Promise.all([
+        fetch(`data/rutas_${turno}.geojson`).then(response => response.json()).then(data => { rutasGeoJSON[turno] = data; }),
+        fetch(`data/${nombresNodos[turno]}.geojson`).then(response => response.json()).then(data => { nodosGeoJSON[turno] = data; })
+      ]))).then(buildRouteLayers).catch(error => {
+        console.error("Error al cargar las rutas:", error);
+        const routeContainer = document.getElementById("routeCheckboxes");
+        if (routeContainer) routeContainer.innerHTML = '<div class="text-warning small">No se pudieron cargar las rutas. Revisa la conexión con la carpeta data.</div>';
       });
-
-      function toggleTurno(turno, on) {
-        const capa = capasRutas[turno];
-        const outline = capasRutasOutline[turno];
-        const capaNodos = capasNodos[turno];
-        if (!capa) return;
-        if (on) {
-          if (outline && !map.hasLayer(outline)) outline.addTo(map);
-          if (!map.hasLayer(capa)) capa.addTo(map);
-          if (capaNodos && !map.hasLayer(capaNodos)) capaNodos.addTo(map);
-        } else {
-          if (map.hasLayer(capa)) map.removeLayer(capa);
-          if (outline && map.hasLayer(outline)) map.removeLayer(outline);
-          if (capaNodos && map.hasLayer(capaNodos)) map.removeLayer(capaNodos);
-        }
-        requestAnimationFrame(() => map.invalidateSize({ pan: false }));
-      }
-
-      function toggleNodos(turno, on) {
-        const capaNodos = capasNodos[turno];
-        if (!capaNodos) return;
-        if (on) {
-          capaNodos.addTo(map);
-        } else {
-          if (map.hasLayer(capaNodos)) map.removeLayer(capaNodos);
-        }
-      }
-
-      document.getElementById("chkMatutino").addEventListener("change", e => toggleTurno("matutino", e.target.checked));
-      document.getElementById("chkTarde").addEventListener("change", e => toggleTurno("tarde", e.target.checked));
-      document.getElementById("chkVespertino").addEventListener("change", e => toggleTurno("vespertino", e.target.checked));
       
       document.getElementById("btnLimpiar").addEventListener("click", () => {
-        ["chkMatutino","chkTarde","chkVespertino"].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
-        ["matutino","tarde","vespertino"].forEach(t => {
-          const capa = capasRutas[t];
-          const capaNodos = capasNodos[t];
-          if (capa && map.hasLayer(capa)) map.removeLayer(capa);
-          if (capaNodos && map.hasLayer(capaNodos)) map.removeLayer(capaNodos);
-        });
+        const master = document.getElementById("chkRutas");
+        if (master) master.checked = false;
+        document.querySelectorAll(".route-checkbox").forEach(input => { input.checked = false; setRouteVisibility(input.dataset.routeId, false); });
+        updateMasterRouteCheckbox();
       });
 
       let chartRef = null;
@@ -636,7 +816,7 @@ para ver sus detalles.</h6>
         return feature ? Number(feature.properties.Distancia) || 0 : 0;
       }
 
-      async function dibujarGraficaRuta(rutaId, turno, titulo = "", subtitulo = "") {
+      async function dibujarGraficaRutaLegacy(rutaId, turno, titulo = "", subtitulo = "") {
         try {
           console.log("Iniciando dibujarGraficaRuta para ruta:", rutaId, "turno:", turno);
           const data = await cargarTiempos();
@@ -660,7 +840,8 @@ para ver sus detalles.</h6>
 
           const filtrado = data.filter(d =>
             String(d["RUTAS ID"]).trim().toLowerCase() === String(rutaId).trim().toLowerCase() &&
-            String(d.Turno).trim().toLowerCase() === String(turno).trim().toLowerCase()
+            String(d.Turno).trim().toLowerCase() === String(turno).trim().toLowerCase() &&
+            tiempoValido(d)
           );
           console.log("Registros filtrados:", filtrado.length);
             
@@ -676,6 +857,7 @@ para ver sus detalles.</h6>
           const fecha = d.Fecha;
           const tipo = d["TIPO TRANSPORTE"];
           const tiempo = Number(d.Tiempo);
+          if (!tiempoValido(d)) return;
           if (!tiemposPorTransporte[tipo]) tiemposPorTransporte[tipo] = {};
           tiemposPorTransporte[tipo][fecha] = tiempo;
         });
@@ -768,6 +950,17 @@ para ver sus detalles.</h6>
         });
 
         const info = document.getElementById("estadisticasInfo");
+        const legacyOdometer = (label, rawValue, color) => {
+          const value = Number(rawValue) || 0;
+          const maxSpeed = 80;
+          const boundedValue = Math.min(Math.max(value, 0), maxSpeed);
+          const needleAngle = Math.PI + (boundedValue / maxSpeed) * Math.PI;
+          const needleX = 90 + Math.cos(needleAngle) * 76;
+          const needleY = 90 + Math.sin(needleAngle) * 76;
+          const progress = (boundedValue / maxSpeed) * 251.3;
+          const gauge = `<svg viewBox="0 0 180 100" width="180" height="100" role="img" aria-label="Indicador de velocidad"><path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="#dedede" stroke-width="16"/><path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="${color}" stroke-width="16" stroke-dasharray="${progress} 251.3" stroke-linecap="butt"/><line x1="90" y1="90" x2="${needleX}" y2="${needleY}" stroke="#333" stroke-width="3"/><circle cx="90" cy="90" r="10" fill="#333"/></svg>`;
+          return `<div class="speed-odometer" style="display:inline-block;width:210px;text-align:center;vertical-align:top" aria-label="${label}: ${value.toFixed(1)} km/h"><div class="odometer-title">${value.toFixed(1)} km/h</div>${gauge}<div class="odometer-label">${label}</div></div>`;
+        };
         info.innerHTML = `
           <div><strong>Ruta:</strong> ${origenDestino ? `<span class="ruta-pill">${origenDestino}</span>` : ""}</div>
           <div><strong>Turno:</strong> ${turno}</div>
@@ -775,7 +968,9 @@ para ver sus detalles.</h6>
           <ul>
             ${Object.entries(promedios).map(([tipo, valor]) => `<li>${tipo}: ${valor} min</li>`).join("")}
           </ul>
+          <section class="speed-odometers" style="display:block;text-align:center;width:100%;margin-top:20px" aria-label="Velocidad promedio"><h6>Velocidad promedio</h6><div style="display:flex;justify-content:center;align-items:flex-start;gap:20px;flex-wrap:wrap">${legacyOdometer("Ruta Transporte", velocidades["Ruta Transporte"], "#4CAF50")}${legacyOdometer("Ruta Vehículo", velocidades["Ruta Vehiculo"] ?? velocidades["Ruta Vehiculo "], "#616161")}</div></section>
         `;
+        document.getElementById("estadisticasDistancia").textContent = `Distancia: ${distanciaKm.toFixed(2)} km`;
 
         // Construir tabla mensual SOLO para el turno seleccionado
         (function renderTablaMensual(){
@@ -796,6 +991,7 @@ para ver sus detalles.</h6>
             const mesLabel = fecha.toLocaleString('es-ES', { year: 'numeric', month: 'short' });
             const tipo = String(d["TIPO TRANSPORTE"]).trim();
             const tiempo = Number(d.Tiempo);
+            if (!tiempoValido(d)) return;
 
             if (!tablaMes[mesKey]) tablaMes[mesKey] = {};
             if (!tablaMes[mesKey][tipo]) tablaMes[mesKey][tipo] = [];
@@ -998,6 +1194,129 @@ para ver sus detalles.</h6>
           alert("Error al cargar la gráfica: " + error.message);
         }
       }
+      function statsRouteMatches(record, routeId) {
+        const recordId = String(record["RUTAS ID"] || "").trim().toLowerCase();
+        const selectedId = String(routeId || "").trim().toLowerCase();
+        if (recordId === selectedId) return true;
+        if (!/^12(?:\s|$)/.test(selectedId)) return false;
+        return new Set(["12 ida", "12 regreso", "12 a ida", "12 a regreso"]).has(recordId);
+      }
+
+      function statsLabel(type) {
+        if (type === "Ruta Transporte") return "Ruta Transporte";
+        if (type === "Odometro") return "Odómetro";
+        return "Ruta Vehículo";
+      }
+
+      function statsType(record) {
+        const type = String(record["TIPO TRANSPORTE"] || "").trim().toLowerCase();
+        if (type.includes("odometro") || type.includes("odómetro")) return "Odometro";
+        if (type === "ruta transporte") return "Ruta Transporte";
+        if (type === "ruta vehiculo" || type === "ruta vehículo") return "Ruta Vehiculo";
+        return null;
+      }
+
+      function average(values) {
+        const validValues = values.filter(value => Number.isFinite(value) && value > 0);
+        return validValues.length ? validValues.reduce((sum, value) => sum + value, 0) / validValues.length : null;
+      }
+
+      function routeDistance(routeId, turno) {
+        const feature = selectRouteFeature(turno, routeId);
+        return Number(feature?.properties?.Distancia || 0);
+      }
+
+      function calculateTurnStats(routeId, turno, records) {
+        const filtered = records.filter(record => statsRouteMatches(record, routeId) && String(record.Turno || "").trim().toLowerCase() === turno && tiempoValido(record));
+        const byType = { "Ruta Transporte": [], "Ruta Vehiculo": [], Odometro: [] };
+        filtered.forEach(record => {
+          const type = statsType(record);
+          if (byType[type] && tiempoValido(record)) byType[type].push({ date: record.Fecha, value: Number(record.Tiempo) });
+        });
+        const values = type => byType[type].map(item => item.value).filter(Number.isFinite);
+        const transport = average(values("Ruta Transporte"));
+        const vehicle = average(values("Ruta Vehiculo"));
+        const odometer = average(values("Odometro"));
+        const distance = routeDistance(routeId, turno);
+        return {
+          filtered, byType, distance,
+          transport, vehicle,
+          odometer,
+          transportSpeed: transport ? distance / (transport / 60) : null,
+          vehicleSpeed: vehicle ? distance / (vehicle / 60) : null,
+          odometerSpeed: odometer ? distance / (odometer / 60) : null,
+          delta: transport !== null && vehicle !== null ? transport - vehicle : null,
+          deltaPercent: transport !== null && vehicle ? ((transport - vehicle) / vehicle) * 100 : null
+        };
+      }
+
+      function renderTurnStats(routeId, routeName, turno, stats) {
+        const container = document.getElementById(`tab${turno.charAt(0).toUpperCase()}${turno.slice(1)}`);
+        if (!container) return;
+        const types = ["Ruta Transporte", "Ruta Vehiculo", ...(stats.odometer !== null ? ["Odometro"] : [])];
+        const dates = [...new Set(stats.filtered.map(record => record.Fecha))].sort();
+        const monthly = {};
+        stats.filtered.forEach(record => {
+          const date = new Date(record.Fecha);
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+          const type = String(record["TIPO TRANSPORTE"] || "").trim();
+          if (!monthly[key]) monthly[key] = { label: date.toLocaleString("es-ES", { month: "short", year: "numeric" }) };
+          if (!monthly[key][type]) monthly[key][type] = [];
+          monthly[key][type].push(Number(record.Tiempo));
+        });
+        const monthKeys = Object.keys(monthly).sort();
+        const monthlyRows = types.map(type => `<tr><td class="tabla-row-label"><strong>${statsLabel(type)}</strong></td>${monthKeys.map(key => `<td class="tabla-data">${average(monthly[key][type] || [])?.toFixed(2) || "-"}</td>`).join("")}</tr>`).join("");
+        const monthlyTable = monthKeys.length ? `<div class="table-responsive"><table class="table table-sm table-striped"><thead><tr><th class="tabla-row-label">Tipo / Mes</th>${monthKeys.map(key => `<th class="tabla-mes-header">${monthly[key].label}</th>`).join("")}</tr></thead><tbody>${monthlyRows}</tbody></table></div>` : '<div class="text-muted">No hay datos mensuales para este turno en esta ruta.</div>';
+        const speed = value => value === null ? "Sin datos" : `${value.toFixed(1)} km/h`;
+        const odometer = (label, value, color) => {
+          const maxSpeed = 80;
+          const numericValue = value === null ? 0 : Math.min(Math.max(value, 0), maxSpeed);
+          const needleAngle = Math.PI + (numericValue / maxSpeed) * Math.PI;
+          const needleX = 90 + Math.cos(needleAngle) * 76;
+          const needleY = 90 + Math.sin(needleAngle) * 76;
+          const progress = (numericValue / maxSpeed) * 251.3;
+          const gauge = `<svg viewBox="0 0 180 100" width="180" height="100" role="img" aria-label="Indicador de velocidad"><path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="#dedede" stroke-width="16"/><path d="M 10 90 A 80 80 0 0 1 170 90" fill="none" stroke="${color}" stroke-width="16" stroke-dasharray="${progress} 251.3" stroke-linecap="butt"/><line x1="90" y1="90" x2="${needleX}" y2="${needleY}" stroke="#333" stroke-width="3"/><circle cx="90" cy="90" r="10" fill="#333"/></svg>`;
+          return `<div class="speed-odometer" style="display:inline-block;width:210px;text-align:center;vertical-align:top" aria-label="${label}: ${speed(value)}"><div class="odometer-title">${speed(value)}</div>${gauge}<div class="odometer-label">${label}</div></div>`;
+        };
+        const directionNotes = { matutino: "los datos en este turno se monitorean en sentido Oeste a Este (Bajada)", tarde: "los datos en este turno se monitorean en sentido Oeste a Este (Bajada)", vespertino: "los datos en este turno se monitorean en sentido Este a Oeste (Subida)" };
+        container.innerHTML = `<div class="mb-2"><strong>Ruta:</strong> <span class="ruta-pill">${routeName}</span><br><strong>Turno:</strong> ${turno.charAt(0).toUpperCase() + turno.slice(1)}<span class="turn-direction-note">${directionNotes[turno]}</span><br><strong>Promedios:</strong><ul><li>Ruta Transporte: ${stats.transport?.toFixed(2) || "Sin datos"} min</li><li>Ruta Vehículo: ${stats.vehicle?.toFixed(2) || "Sin datos"} min</li>${stats.odometer !== null ? `<li>Odómetro: ${stats.odometer.toFixed(2)} min</li>` : ""}</ul></div><div class="mb-3">${monthlyTable}</div><div class="mb-2 text-center"><button class="btn btn-sm btn-vista active stats-view-button" data-chart="daily-${turno}">Vista Diaria</button> <button class="btn btn-sm btn-vista-outline stats-view-button" data-chart="monthly-${turno}">Vista Mensual</button></div><canvas id="daily-${turno}" class="turn-chart"></canvas><canvas id="monthly-${turno}" class="turn-chart" style="display:none"></canvas><section class="speed-odometers" style="display:block;text-align:center;width:100%;margin-top:20px" aria-label="Velocidad promedio"><h6>Velocidad promedio</h6><div style="display:flex;justify-content:center;align-items:flex-start;gap:20px;flex-wrap:wrap">${odometer("Ruta Transporte", stats.transportSpeed, "#4CAF50")}${odometer("Ruta Vehículo", stats.vehicleSpeed, "#616161")}</div></section>`;
+        const datasets = types.map(type => ({ label: statsLabel(type), data: dates.map(date => { const item = stats.byType[type].find(value => value.date === date); return item?.value ?? null; }), borderColor: type === "Ruta Transporte" ? "#4CAF50" : "#616161", backgroundColor: type === "Ruta Transporte" ? "#4CAF50" : "#616161", tension: .25, pointRadius: 0 }));
+        const monthDatasets = types.map(type => ({ label: statsLabel(type), data: monthKeys.map(key => average(monthly[key][type] || [])), borderColor: type === "Ruta Transporte" ? "#4CAF50" : "#616161", backgroundColor: type === "Ruta Transporte" ? "#4CAF50" : "#616161", tension: .25, pointRadius: 0 }));
+        window.routeCharts = window.routeCharts || {};
+        [window.routeCharts[`daily-${turno}`], window.routeCharts[`monthly-${turno}`]].forEach(chart => chart?.destroy());
+        window.routeCharts[`daily-${turno}`] = new Chart(document.getElementById(`daily-${turno}`), { type: "line", data: { labels: dates, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: "Tiempo (min)" } } } } });
+        window.routeCharts[`monthly-${turno}`] = new Chart(document.getElementById(`monthly-${turno}`), { type: "line", data: { labels: monthKeys.map(key => monthly[key].label), datasets: monthDatasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: "Tiempo (min)" } } } } });
+        container.querySelectorAll(".stats-view-button").forEach(button => button.addEventListener("click", () => { const daily = button.dataset.chart.startsWith("daily"); container.querySelector(`#daily-${turno}`).style.display = daily ? "block" : "none"; container.querySelector(`#monthly-${turno}`).style.display = daily ? "none" : "block"; container.querySelectorAll(".stats-view-button").forEach(item => item.classList.toggle("active", item === button)); window.routeCharts[button.dataset.chart]?.resize(); }));
+      }
+
+      function renderComparison(routeId, routeName, allStats) {
+        const turnLabels = ["Matutino", "Tarde", "Vespertino"];
+        const slowest = turnLabels.reduce((current, label) => !allStats[label.toLowerCase()].transport ? current : (!current || allStats[label.toLowerCase()].transport > current.value ? { label, value: allStats[label.toLowerCase()].transport } : current), null);
+        const fastest = turnLabels.reduce((current, label) => !allStats[label.toLowerCase()].transport ? current : (!current || allStats[label.toLowerCase()].transport < current.value ? { label, value: allStats[label.toLowerCase()].transport } : current), null);
+        const slowPercent = slowest && fastest ? ((slowest.value - fastest.value) / fastest.value * 100).toFixed(1) : "0.0";
+        const widest = turnLabels.reduce((current, label) => { const value = Math.abs(allStats[label.toLowerCase()].delta || 0); return !current || value > current.value ? { label, value } : current; }, null);
+        const valueText = value => value === null ? "Sin datos" : value.toFixed(2);
+        const rows = [["Tiempo transporte", stats => stats.transport], ["Tiempo vehículo", stats => stats.vehicle], ["Velocidad transporte", stats => stats.transportSpeed], ["Velocidad vehículo", stats => stats.vehicleSpeed], ["Delta transporte - vehículo", stats => stats.delta], ["Delta porcentual", stats => stats.deltaPercent]].map(([label, getter]) => `<tr><th>${label}</th>${turnLabels.map(labelTurno => `<td>${valueText(getter(allStats[labelTurno.toLowerCase()]))}${label.includes("Velocidad") ? " km/h" : label.includes("porcentual") ? " %" : " min"}</td>`).join("")}</tr>`).join("");
+        document.getElementById("comparativoContenido").innerHTML = `<h6>${routeName}</h6><p>${slowest && fastest ? `El turno más lento es ${slowest.label}, con ${slowPercent}% más tiempo que ${fastest.label}, el turno más rápido.` : "No hay suficientes datos para comparar los turnos."} ${widest ? `La brecha más amplia entre transporte público y vehículo particular aparece en ${widest.label}.` : ""}</p><div class="table-responsive"><table class="table table-sm table-bordered comparison-table"><thead><tr><th>Indicador</th>${turnLabels.map(label => `<th>${label}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
+        window.comparisonChart?.destroy();
+        window.comparisonChart = new Chart(document.getElementById("comparativoChart"), { type: "bar", data: { labels: turnLabels, datasets: [{ label: "Ruta Transporte", data: turnLabels.map(label => allStats[label.toLowerCase()].transport), backgroundColor: "#4CAF50" }, { label: "Ruta Vehículo", data: turnLabels.map(label => allStats[label.toLowerCase()].vehicle), backgroundColor: "#616161" }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: "Tiempo (min)" } } } } });
+      }
+
+      async function dibujarGraficaRuta(routeId, routeNames) {
+        try {
+          const response = await fetch("data/tiempos.json");
+          const source = await response.json();
+          const records = Object.values(source).flat();
+          const allStats = Object.fromEntries(turnos.map(turno => [turno, calculateTurnStats(routeId, turno, records)]));
+          document.querySelector("#estadisticasModal .modal-title").textContent = routeNames.comparison;
+          turnos.forEach(turno => renderTurnStats(routeId, routeNames[turno], turno, allStats[turno]));
+          renderComparison(routeId, routeNames.comparison, allStats);
+          const distance = allStats.matutino.distance || allStats.tarde.distance || allStats.vespertino.distance;
+          document.getElementById("estadisticasDistancia").textContent = `Distancia: ${distance.toFixed(2)} km`;
+          new bootstrap.Modal(document.getElementById("estadisticasModal")).show();
+        } catch (error) { console.error("Error al cargar estadísticas de la ruta:", error); alert("No se pudieron cargar las estadísticas de esta ruta."); }
+      }
+
       } catch(error) {
         console.error("Error en el script principal:", error);
         alert("Error en la aplicación: " + error.message);
